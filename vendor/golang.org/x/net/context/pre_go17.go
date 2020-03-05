@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"k8s.io/klog"
 )
 
 // An emptyCtx is never canceled, has no values, and has no deadline. It is not
@@ -64,6 +65,7 @@ var DeadlineExceeded = errors.New("context deadline exceeded")
 func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
 	c := newCancelCtx(parent)
 	propagateCancel(parent, c)
+	klog.Errorf("with cancel")
 	return c, func() { c.cancel(true, Canceled) }
 }
 
@@ -214,6 +216,7 @@ func WithDeadline(parent Context, deadline time.Time) (Context, CancelFunc) {
 	d := deadline.Sub(time.Now())
 	if d <= 0 {
 		c.cancel(true, DeadlineExceeded) // deadline has already passed
+		klog.Errorf("with cancel, deadline has already passed")
 		return c, func() { c.cancel(true, Canceled) }
 	}
 	c.mu.Lock()
@@ -223,6 +226,7 @@ func WithDeadline(parent Context, deadline time.Time) (Context, CancelFunc) {
 			c.cancel(true, DeadlineExceeded)
 		})
 	}
+	klog.Errorf("latest case")
 	return c, func() { c.cancel(true, Canceled) }
 }
 
